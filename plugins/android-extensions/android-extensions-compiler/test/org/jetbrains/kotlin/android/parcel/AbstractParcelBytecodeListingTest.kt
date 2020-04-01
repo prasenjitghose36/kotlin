@@ -20,6 +20,6 @@ abstract class AbstractParcelBytecodeListingTest : AbstractAsmLikeInstructionLis
             ?: throw RuntimeException(
                 "Unable to get a valid path from 'ideaSdk.androidPlugin.path' property, please point it to the Idea android plugin location"
             )
-        environment.updateClasspath(listOf(JvmClasspathRoot(File(androidPluginPath, "layoutlib.jar"))))
+        environment.updateClasspath(listOf(JvmClasspathRoot(File(androidPluginPath, "layoutlib-26.5.0.2.jar"))))
     }
 }

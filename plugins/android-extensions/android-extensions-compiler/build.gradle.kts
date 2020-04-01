@@ -10,7 +10,7 @@ val robolectricClasspath by configurations.creating
 val androidExtensionsRuntimeForTests by configurations.creating
 
 dependencies {
-    testCompileOnly(intellijCoreDep()) { includeJars("intellij-core") }
+    testCompile(intellijCoreDep()) { includeJars("intellij-core") }
 
     compileOnly(project(":compiler:util"))
     compileOnly(project(":compiler:plugin-api"))
@@ -35,7 +35,7 @@ dependencies {
 
     testRuntime(intellijPluginDep("junit"))
 
-    robolectricClasspath(commonDep("org.robolectric", "robolectric"))
+    robolectricClasspath("org.robolectric:robolectric:4.0")
     robolectricClasspath("org.robolectric:android-all:4.4_r1-robolectric-1")
     robolectricClasspath(project(":kotlin-android-extensions-runtime")) { isTransitive = false }
 
@@ -64,7 +64,7 @@ projectTest {
     useAndroidJar()
     doFirst {
         systemProperty("androidExtensionsRuntime.classpath", androidExtensionsRuntimeForTests.asPath)
-        val androidPluginPath = File(intellijRootDir(), "plugins/android").canonicalPath
+        val androidPluginPath = File(intellijRootDir(), "plugins/android/lib").canonicalPath
         systemProperty("ideaSdk.androidPlugin.path", androidPluginPath)
         systemProperty("robolectric.classpath", robolectricClasspath.asPath)
     }

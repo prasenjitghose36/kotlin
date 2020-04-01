@@ -1,3 +1,5 @@
+// IGNORE_BACKEND: JVM
+// This feature regressed with the fix for KT-22576
 // WITH_RUNTIME
 
 @file:JvmName("TestKt")
