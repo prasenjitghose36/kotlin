@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.descriptors.deserialization.PLATFORM_DEPENDENT_ANNOT
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.Scope
+import org.jetbrains.kotlin.ir.builders.declarations.buildProperty
 import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.descriptors.IrBuiltIns
 import org.jetbrains.kotlin.ir.expressions.*
@@ -310,4 +311,22 @@ fun firstSuperMethodFromKotlin(
         val owner = it.owner
         owner.modality != Modality.ABSTRACT && owner.overrides(implementation)
     }
+}
+
+// MethodSignatureMapper uses the corresponding property of a function to determine correct names
+// for property accessors.
+fun IrSimpleFunction.copyCorrespondingPropertyFrom(source: IrSimpleFunction) {
+    val property = source.correspondingPropertySymbol?.owner ?: return
+    val target = this
+
+    correspondingPropertySymbol = buildProperty {
+        name = property.name
+    }.apply {
+        parent = target.parent
+        when {
+            source.isGetter -> getter = target
+            source.isSetter -> setter = target
+            else -> error("Orphaned property getter/setter: ${source.render()}")
+        }
+    }.symbol
 }
