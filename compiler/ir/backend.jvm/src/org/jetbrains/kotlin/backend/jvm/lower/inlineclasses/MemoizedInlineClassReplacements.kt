@@ -176,33 +176,41 @@ class MemoizedInlineClassReplacements {
         replacementOrigin: IrDeclarationOrigin,
         noFakeOverride: Boolean = false,
         body: IrFunctionImpl.() -> Unit
-    ) =
-        buildFunWithDescriptorForInlining(function.descriptor) {
-            updateFrom(function)
-            origin = if (function.origin == IrDeclarationOrigin.GENERATED_INLINE_CLASS_MEMBER) {
-                JvmLoweredDeclarationOrigin.INLINE_CLASS_GENERATED_IMPL_METHOD
-            } else {
-                replacementOrigin
-            }
-            if (noFakeOverride) {
-                isFakeOverride = false
-            }
-            name = mangledNameFor(function)
-            returnType = function.returnType
-        }.apply {
-            parent = function.parent
-            annotations += function.annotations
-            copyTypeParameters(function.allTypeParameters)
-            metadata = function.metadata
-            function.safeAs<IrFunctionBase<*>>()?.metadata = null
+    ) = buildFunWithDescriptorForInlining(function.descriptor) {
+        updateFrom(function)
+        origin = if (function.origin == IrDeclarationOrigin.GENERATED_INLINE_CLASS_MEMBER) {
+            JvmLoweredDeclarationOrigin.INLINE_CLASS_GENERATED_IMPL_METHOD
+        } else {
+            replacementOrigin
+        }
+        if (noFakeOverride) {
+            isFakeOverride = false
+        }
+        name = mangledNameFor(function)
+        returnType = function.returnType
+    }.apply {
+        parent = function.parent
+        annotations += function.annotations
+        copyTypeParameters(function.allTypeParameters)
+        metadata = function.metadata
+        function.safeAs<IrFunctionBase<*>>()?.metadata = null
 
-            if (function is IrSimpleFunction) {
-                correspondingPropertySymbol = function.correspondingPropertySymbol
-                overriddenSymbols = function.overriddenSymbols.map {
-                    getReplacementFunction(it.owner)?.symbol ?: it
+        if (function is IrSimpleFunction) {
+            val propertySymbol = function.correspondingPropertySymbol
+            correspondingPropertySymbol = propertySymbol
+            if (propertySymbol != null) {
+                when (function) {
+                    propertySymbol.owner.getter -> propertySymbol.owner.getter = this
+                    propertySymbol.owner.setter -> propertySymbol.owner.setter = this
+                    else -> error("Orphaned property getter/setter: ${function.render()}")
                 }
             }
 
-            body()
+            overriddenSymbols = function.overriddenSymbols.map {
+                getReplacementFunction(it.owner)?.symbol ?: it
+            }
         }
+
+        body()
+    }
 }
